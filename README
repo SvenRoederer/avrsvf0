@@ -1,0 +1,34 @@
+avrsvf0
+
+
+Description
+-------------------------------------------------------------------------------
+Tool to create SVF files from HEX files for Atmel microcontrollers, similar to 
+the closed-source avrsvf.exe application available from Atmel.
+
+
+Installation
+-------------------------------------------------------------------------------
+
+1. Run make to compile the avrsvf0 binary. 
+2 Copy the avrsvf0 binary into a directory in your path, e.g. /usr/local/bin
+
+
+Notes
+-------------------------------------------------------------------------------
+
+I've written the tool to create simple svf files for atmega16 and atmega128
+microcontrollers. Not all features of the original tool are currently imple-
+mented. The following invocations work fine:
+
+./avrsvf0 -datmega16 -s -e -ifa.hex -pf -vf -F -oa.svf -mp -f0xff89ff
+./avrsvf0 -datmega128 -chd1 -ctd0 -chi8 -cti0 -s -e -ifa.hex -pf -vf -F -oa.svf -mp -f0xff89ff
+
+
+Contact
+-------------------------------------------------------------------------------
+mailto: aschweiz@mac.com   (Andreas Schweizer)
+http://sourceforge.net/projects/avrsvf0/
+
+
+-- 29.03.2009 ASR
