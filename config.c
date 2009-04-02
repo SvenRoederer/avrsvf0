@@ -39,6 +39,49 @@ int s_ctd;
 int s_chi;
 int s_cti;
 
+void printUsage() {
+	printf("avrsvf0 v0.1.1 (C) 2009 A. Schweizer\n");
+	printf("\n");
+	printf("Command Line Switches:\n");
+	printf("        [-d device name] [-m s|p] [-if infile] [-ov outfile]\n");
+	printf("        [-s] [-e] [-p f|e|b] [-v f|e|b] [-f value]\n");
+	printf("        [-F] [-c hd|td|hi|ti] [-h|?]\n");
+	printf("\n");
+	printf("Parameters:\n");
+	printf("d       Device name. See list of supported devices below.\n");
+	printf("m       Select programming mode; serial (s) or pageload (p). Pageload is the\n");
+	printf("        most efficient, but can only be used when the target AVR is alone in\n");
+	printf("        the JTAG chain. Default is Serial programming mode.\n");
+	printf("          ** currently, only pageload is supported in avrsvf0 **\n");
+	printf("if      Name of FLASH input file. Required for programming or verification\n");
+	printf("        of the FLASH memory. The file format is Intel Extended HEX.\n");
+	printf("ov      Name of SVF output file.\n");
+	printf("s       Verify signature bytes.\n");
+	printf("e       Erase device. If applied with another programming parameter, the\n");
+	printf("        device will be erased before any other programming takes place.\n");
+	printf("p       Program device; FLASH (f), EEPROM (e) or both (b). Corresponding\n");
+	printf("        input files are required.\n");
+	printf("          ** currently, only f is supported in avrsvf0 **\n");
+	printf("v       Verify device; FLASH (f), EEPROM (e) or both (b). Can be used with\n");
+	printf("        -p or standalone. Corresponding input files are required.\n");
+	printf("          ** currently, only f is supported in avrsvf0 **\n");
+	printf("f       Set fuse bytes. 'value' is a 16(/24)-bit hex value describing the\n");
+	printf("        settings for the (extended,) upper and lower fuse.\n");
+	printf("F       Verify fuse bytes.\n");
+	printf("c##     JTAG chain information (default is all set to NULL)\n");
+	printf(" chd     HDR - Number of devices after the current device.\n");
+	printf(" ctd     TDR - Number of devices ahead of the current device.\n");
+	printf(" chi     HIR - Total number of bits in instruction registers after the\n");
+	printf("               current device.\n");
+	printf(" cti     TIR - Total number of bits in instruction registers ahead of the\n");
+	printf("               current device.\n");
+	printf("          ** currently, only HDR and HIR are supported in avrsvf0 **\n");
+	printf("h|?     Help information, this page. (overrides all other settings)\n");
+	printf("\n");
+	printf("Supported devices:\n");
+	printf(" ATmega16  ATmega128\n");
+}
+
 void parseArguments(int argc, char *argv[]) {
 	unsigned fuseBytes = 0;
 	char *originalArgument;
@@ -47,6 +90,11 @@ void parseArguments(int argc, char *argv[]) {
 		originalArgument = *argv;
 		c = *++argv[0];
 		switch (c) {
+			case 'h':
+			case '?':
+				printUsage();
+				exit(0);
+				break;				
 			case 'c':
 				if (1 == sscanf(argv[0], "chd%d", &s_chd)) {
 					break;
@@ -87,6 +135,7 @@ void parseArguments(int argc, char *argv[]) {
 					printf("infile = %s\n", s_infile);
 				} else {
 					fprintf(stderr, "invalid argument: %s\n", originalArgument);
+					exit(1);
 				}
 				break;
 			case 'p': 
@@ -119,8 +168,14 @@ void parseArguments(int argc, char *argv[]) {
 				}
 				break;
 			case 'o':
-				strncpy(s_outfile, ++argv[0], 256);
-				printf("outfile = %s\n", s_outfile);
+				c = *++argv[0];
+				if (c == 'v') {
+					strncpy(s_outfile, ++argv[0], 256);
+					printf("outfile = %s\n", s_outfile);
+				} else {
+					fprintf(stderr, "invalid argument: %s\n", originalArgument);
+					exit(1);
+				}
 				break;	
 			case 'm':
 				c = *++argv[0];
