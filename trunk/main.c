@@ -44,6 +44,12 @@ int resetHT = 0;
 
 int main(int argc, char *argv[]) {
 	int i, j=0;
+	
+	if (argc <= 1) {
+		printf("Use -h or -? for help.\n");
+		return;
+	}
+	
 	for (i=0; i<argc; i++) {
 		sprintf(&cmd[j], "%s ", argv[i]);
 		j = strlen(cmd);
