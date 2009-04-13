@@ -17,9 +17,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-char s_device[16];
-char s_infile[256];
-char s_outfile[256];
+char *s_version = "v0.1.2";
+
+char s_device[16] = "";
+char s_infile[256] = "";
+char s_outfile[256] = "";
+
+int s_verbose;
 
 unsigned s_fuseLowByte;
 unsigned s_fuseHighByte;
@@ -40,12 +44,12 @@ int s_chi;
 int s_cti;
 
 void printUsage() {
-	printf("avrsvf0 v0.1.1 (C) 2009 A. Schweizer\n");
+	printf("avrsvf0 %s (C) 2009 A. Schweizer\n", s_version);
 	printf("\n");
 	printf("Command Line Switches:\n");
 	printf("        [-d device name] [-m s|p] [-if infile] [-ov outfile]\n");
 	printf("        [-s] [-e] [-p f|e|b] [-v f|e|b] [-f value]\n");
-	printf("        [-F] [-c hd|td|hi|ti] [-h|?]\n");
+	printf("        [-F] [-c hd|td|hi|ti] [-verbose] [-h|?]\n");
 	printf("\n");
 	printf("Parameters:\n");
 	printf("d       Device name. See list of supported devices below.\n");
@@ -76,6 +80,7 @@ void printUsage() {
 	printf(" cti     TIR - Total number of bits in instruction registers ahead of the\n");
 	printf("               current device.\n");
 	printf("          ** currently, only HDR and HIR are supported in avrsvf0 **\n");
+	printf("verbose Display debugging information during execution.\n");
 	printf("h|?     Help information, this page. (overrides all other settings)\n");
 	printf("\n");
 	printf("Supported devices:\n");
@@ -108,12 +113,10 @@ void parseArguments(int argc, char *argv[]) {
 				break;
 			case 'd':
 				strncpy(s_device, ++argv[0], 16);
-				printf("device = %s\n", s_device);
 				break;
 			case 's':
 				if (!*++argv[0]) {
 					s_verifySignByte = 1;
-					printf("verify sign byte = 1\n");
 				} else {
 					fprintf(stderr, "invalid argument: %s\n", originalArgument);
 					exit(1);
@@ -122,7 +125,6 @@ void parseArguments(int argc, char *argv[]) {
 			case 'e':
 				if (!*++argv[0]) {
 					s_eraseDevice = 1;
-					printf("erase device = 1\n");
 				} else {
 					fprintf(stderr, "invalid argument: %s\n", originalArgument);
 					exit(1);
@@ -132,7 +134,6 @@ void parseArguments(int argc, char *argv[]) {
 				c = *++argv[0];
 				if (c == 'f') {
 					strncpy(s_infile, ++argv[0], 256);
-					printf("infile = %s\n", s_infile);
 				} else {
 					fprintf(stderr, "invalid argument: %s\n", originalArgument);
 					exit(1);
@@ -142,26 +143,27 @@ void parseArguments(int argc, char *argv[]) {
 				c = *++argv[0];
 				if (c == 'f' && !*++argv[0]) {
 					s_programDevice = 1;
-					printf("program device = 1\n");
 				} else {
 					fprintf(stderr, "invalid argument: %s\n", originalArgument);
 					exit(1);
 				}
 				break;
 			case 'v':
-				c = *++argv[0];
-				if (c == 'f' && !*++argv[0]) {
-					s_verifyDevice = 1;
-					printf("verify device = 1\n");
+				if (!strcmp(originalArgument, "-verbose")) {
+					s_verbose = 1;
 				} else {
-					fprintf(stderr, "invalid argument: %s\n", originalArgument);
-					exit(1);
+					c = *++argv[0];
+					if (c == 'f' && !*++argv[0]) {
+						s_verifyDevice = 1;
+					} else {
+						fprintf(stderr, "invalid argument: %s\n", originalArgument);
+						exit(1);
+					}
 				}
 				break;
 			case 'F':
 				if (!*++argv[0]) {
 					s_verifyFuses = 1;
-					printf("verify fuses = 1\n");
 				} else {
 					fprintf(stderr, "invalid argument: %s\n", originalArgument);
 					exit(1);
@@ -171,7 +173,6 @@ void parseArguments(int argc, char *argv[]) {
 				c = *++argv[0];
 				if (c == 'v') {
 					strncpy(s_outfile, ++argv[0], 256);
-					printf("outfile = %s\n", s_outfile);
 				} else {
 					fprintf(stderr, "invalid argument: %s\n", originalArgument);
 					exit(1);
@@ -181,7 +182,6 @@ void parseArguments(int argc, char *argv[]) {
 				c = *++argv[0];
 				if (c == 'p' && !*++argv[0]) {
 					s_pageloadProgramming = 1;
-					printf("pageload programming = 1\n");
 				} else {
 					fprintf(stderr, "invalid argument: %s\n", originalArgument);
 					exit(1);
@@ -193,7 +193,6 @@ void parseArguments(int argc, char *argv[]) {
 				s_fuseHighByte = (fuseBytes >> 8) & 0xFF;
 				s_fuseLowByte = fuseBytes & 0xFF;
 				s_programFuses = 1;
-				printf("program fuses %02x %02x\n", s_fuseHighByte, s_fuseLowByte);
 				break;
 			default:
 				fprintf(stderr, "invalid argument: %s\n", originalArgument);

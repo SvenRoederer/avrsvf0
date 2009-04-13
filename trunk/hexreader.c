@@ -28,7 +28,7 @@ unsigned lastAddress() {
 }
 
 char *getBytes(unsigned start) {
-	return &s_data[start];
+	return (char *) &s_data[start];
 }
 
 void readFile(char *fileName) {

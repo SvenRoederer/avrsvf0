@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <time.h>
 
 #include "config.h"
@@ -44,6 +45,7 @@ int resetHT = 0;
 
 int main(int argc, char *argv[]) {
 	int i, j=0;
+	int invalidArgs = 0;
 	
 	if (argc <= 1) {
 		printf("Use -h or -? for help.\n");
@@ -56,7 +58,35 @@ int main(int argc, char *argv[]) {
 	}
 
 	parseArguments(argc, argv);
+
+	if (!strlen(s_infile)) {
+		fprintf(stderr, "No input file specified.\n");
+		invalidArgs = 1;
+	}
+	if (!strlen(s_outfile)) {
+		fprintf(stderr, "No output file specified.\n");
+		invalidArgs = 1;
+	}
+	if (!strlen(s_device)) {
+		fprintf(stderr, "No device specified.\n");
+		invalidArgs = 1;
+	}
+	if (invalidArgs) {
+		fprintf(stderr, "Use -h to get help!\n");
+		exit(1);
+	}
+
 	writeSvfFile();
+}
+
+void debugInfo(const char *formatString, ...) {
+	va_list ellipsisArgs;
+	if (!s_verbose) {
+		return;
+	}
+	va_start(ellipsisArgs, formatString);
+	vprintf((char *)formatString, ellipsisArgs);
+	va_end(ellipsisArgs);	
 }
 
 void writeEnHeaderTrailer() {
@@ -102,15 +132,18 @@ void writeSvfFile() {
 	time_t rawtime;
 	time(&rawtime);
 
+	debugInfo("opening output file: %s\n", s_outfile);
 	outfile = fopen(s_outfile, "w");
-	
-	fprintf(outfile, "// avrsvf0 v0.1 (C) 2009 A. Schweizer\n");
+
+	debugInfo("writing header\n");
+	fprintf(outfile, "// avrsvf0 %s (C) 2009 A. Schweizer\n", s_version);
 	fprintf(outfile, "// This file was made: %s", ctime(&rawtime));
 	fprintf(outfile, "// with this cmd: %s\n", cmd);
 	fprintf(outfile, "TRST ABSENT;\n");
 	fprintf(outfile, "ENDIR IDLE;\n");
 	fprintf(outfile, "ENDDR IDLE;\n");
 	
+	debugInfo("writing EnHeaderTrailer\n");
 	writeEnHeaderTrailer();
 
 	fprintf(outfile, "STATE RESET;\n");
@@ -126,28 +159,35 @@ void writeSvfFile() {
 	fprintf(outfile, "SDR 16 TDI(a370);\n");
 	
 	if (s_eraseDevice) {
+		debugInfo("writing EraseDevice\n");
 		writeEraseDevice();
 	}
 	
 	if (s_verifySignByte) {
+		debugInfo("writing VerifySignatureByte\n");
 		writeVerifySignatureByte();
 	}
 
+	debugInfo("reading input file: %s\n", s_infile);
 	readFile(s_infile);
 	
 	if (s_programDevice) {
+		debugInfo("writing WriteFlash\n");
 		writeWriteFlash();
 	}
 	
 	if (s_verifyDevice) {
+		debugInfo("writing VerifyFlash\n");
 		writeVerifyFlash();
 	}
 
 	if (s_programFuses) {
+		debugInfo("writing ProgramFuses\n");
 		writeProgramFuses();
 	}
 	
 	if (s_verifyFuses) {
+		debugInfo("writing VerifyFuses\n");
 		writeVerifyFuses();
 	}
 	
@@ -163,6 +203,7 @@ void writeSvfFile() {
 	
 	fprintf(outfile, "STATE RESET;\n");
 	
+	debugInfo("closing output file\n");
 	fclose(outfile);
 }
 
