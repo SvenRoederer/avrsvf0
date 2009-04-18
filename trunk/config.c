@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *s_version = "v0.1.2";
+char *s_version;
 
 char s_device[16] = "";
 char s_infile[256] = "";
@@ -81,7 +81,7 @@ void printUsage() {
 	printf("               current device.\n");
 	printf("          ** currently, only HDR and HIR are supported in avrsvf0 **\n");
 	printf("verbose Display debugging information during execution.\n");
-	printf("h|?     Help information, this page. (overrides all other settings)\n");
+	printf("h       Help information, this page. (overrides all other settings)\n");
 	printf("\n");
 	printf("Supported devices:\n");
 	printf(" ATmega16  ATmega128\n");
@@ -96,7 +96,6 @@ void parseArguments(int argc, char *argv[]) {
 		c = *++argv[0];
 		switch (c) {
 			case 'h':
-			case '?':
 				printUsage();
 				exit(0);
 				break;				
