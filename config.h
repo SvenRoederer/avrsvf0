@@ -16,7 +16,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H 1
 
-extern char s_version[];
+extern char *s_version;
 
 extern char s_device[];
 extern char s_infile[];
