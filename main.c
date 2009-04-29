@@ -289,6 +289,18 @@ void writeWriteFlash() {
             fprintf(outfile, "SDR 15 TDI(3700);\n");
             
             address += 2;
+            
+            /* write page at end */
+            if (address < lastAddress() && (address % n == 0)) {
+                fprintf(outfile, "SDR 15 TDI(3700);\n");
+                fprintf(outfile, "SDR 15 TDI(3500);\n");
+                fprintf(outfile, "SDR 15 TDI(3700);\n");
+                fprintf(outfile, "SDR 15 TDI(3700);\n");
+                
+                fprintf(outfile, "RUNTEST 7E-3 SEC;\n");
+                
+                oldHighByte = -1;
+            }
         }
     } else {
         while (address < lastAddress()) {
