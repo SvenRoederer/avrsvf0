@@ -56,7 +56,6 @@ void printUsage() {
 	printf("m       Select programming mode; serial (s) or pageload (p). Pageload is the\n");
 	printf("        most efficient, but can only be used when the target AVR is alone in\n");
 	printf("        the JTAG chain. Default is Serial programming mode.\n");
-	printf("          ** currently, only pageload is supported in avrsvf0 **\n");
 	printf("if      Name of FLASH input file. Required for programming or verification\n");
 	printf("        of the FLASH memory. The file format is Intel Extended HEX.\n");
 	printf("ov      Name of SVF output file.\n");
@@ -179,8 +178,15 @@ void parseArguments(int argc, char *argv[]) {
 				break;	
 			case 'm':
 				c = *++argv[0];
-				if (c == 'p' && !*++argv[0]) {
-					s_pageloadProgramming = 1;
+				if (!*++argv[0]) {
+                    if (c == 'p') {
+                        s_pageloadProgramming = 1;
+                    } else if (c == 's') {
+                        s_pageloadProgramming = 0;
+                    } else {
+                        fprintf(stderr, "invalid argument: %s\n", originalArgument);
+                        exit(1);
+                    }
 				} else {
 					fprintf(stderr, "invalid argument: %s\n", originalArgument);
 					exit(1);
