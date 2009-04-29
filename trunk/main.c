@@ -245,7 +245,7 @@ void writeVerifySignatureByte() {
 }
 
 void writeWriteFlash() {
-	unsigned address = 0, address2;
+	unsigned address = 0, address2, oldHighByte;
 	char *data, bytes[513];
 	int i, n;
 
@@ -257,73 +257,109 @@ void writeWriteFlash() {
 		printf("unknown device: %s\n", s_device);
 		exit(-1);	
 	}
-	
-	/* see doc2466, p.263; 'enter flash write' */
-	fprintf(outfile, "SIR 4 TDI(5);\n");
+
+	/* prog_commands (doc2466, p.280) */
+	fprintf(outfile, "SIR 4 TDI(5);\n"); /* enable programming commands */
+	/* 'enter flash write' (doc2466, p.283) */
 	fprintf(outfile, "SDR 15 TDI(2310);\n");
 
-	while (address < lastAddress()) {
-		data = getBytes(address);
+    if (!s_pageloadProgramming) {
+        oldHighByte = -1;
+        while (address < lastAddress()) {
+            data = getBytes(address);
+            
+            /* address high: 07xx; address low: 03xx */
+            address2 = address / 2;
+            /* load adr high */
+            if (oldHighByte != ((address2 >> 8) & 0xFF)) {
+                oldHighByte = (address2 >> 8) & 0xFF;
+                fprintf(outfile, "SDR 15 TDI(07%02x);\n", oldHighByte);
+            }
+            /* load adr low */
+            fprintf(outfile, "SDR 15 TDI(03%02x);\n", address2 & 0xFF);
+            
+            /* load data low */
+            fprintf(outfile, "SDR 15 TDI(13%02x);\n", data[0] & 0xFF);
+            /* load data high */
+            fprintf(outfile, "SDR 15 TDI(17%02x);\n", data[1] & 0xFF);
 
-		/* address high: 07xx; address low: 03xx */
-		address2 = address / 2;
-		fprintf(outfile, "SDR 15 TDI(07%02x);\n", (address2 >> 8) & 0xFF);
-		fprintf(outfile, "SDR 15 TDI(03%02x);\n", address2 & 0xFF);
-		fprintf(outfile, "SIR 4 TDI(6);\n");
-		
-		if (resetHT) {
-			writeDisHeaderTrailer();
-		}
+            /* latch data: 3700 7700 3700 */
+            fprintf(outfile, "SDR 15 TDI(3700);\n");
+            fprintf(outfile, "SDR 15 TDI(7700);\n");
+            fprintf(outfile, "SDR 15 TDI(3700);\n");
+            
+            address += 2;
+        }
+    } else {
+        while (address < lastAddress()) {
+            data = getBytes(address);
 
-		fprintf(outfile, "SDR %d TDI", 8*n);
-	
-		// 1024 bit = 128 byte, in pairs of 2 bytes, in reverse byte order
-		
-		//:100000000C942A000C9445000C9445000C94450077
-		//:100010000C9445000C9445000C9445000C9445004C
-		//:100020000C9445000C9445000C9445000C94A203DC
-		//:100030000C945B030C9445000C9445000C94450013
-		//:100040000C9445000C9445000C9445000C9445001C
-		//:100050000C94450011241FBECFE5D4E0DEBFCDBF18
-		//:1000600011E0A0E6B0E0E4E2FEE102C005900D92EE
-		//:10007000A230B107D9F712E0A2E0B1E001C01D92B1
-		
-		// : len=10 adr = 0000 typ=00(data) data=0C942A000C9445000C9445000C944500 cks=77
-		
-		// 921dc001e0b1e0a2e012f7d907b130a2
-		// 920d9005c002e1fee2e4e0b0e6a0e011
-		// bfcdbfdee0d4e5cfbe1f24110045940c
-		// 0045940c0045940c0045940c0045940c
-		// ...
-		// 0045940c0045940c0045940c002a940c
+            /* address high: 07xx; address low: 03xx */
+            address2 = address / 2;
+            /* load adr high */
+            fprintf(outfile, "SDR 15 TDI(07%02x);\n", (address2 >> 8) & 0xFF);
+            /* load adr low */
+            fprintf(outfile, "SDR 15 TDI(03%02x);\n", address2 & 0xFF);
+            
+            /* prog_pageload */
+            fprintf(outfile, "SIR 4 TDI(6);\n");
+            
+            if (resetHT) {
+                writeDisHeaderTrailer();
+            }
 
-		for (i=0; i<n; i++) {
-			sprintf(&bytes[2*i], "%02x", data[n-1 - i] & 0xFF);
-		}
+            fprintf(outfile, "SDR %d TDI", 8*n);
+        
+            // 1024 bit = 128 byte, in pairs of 2 bytes, in reverse byte order
+            
+            //:100000000C942A000C9445000C9445000C94450077
+            //:100010000C9445000C9445000C9445000C9445004C
+            //:100020000C9445000C9445000C9445000C94A203DC
+            //:100030000C945B030C9445000C9445000C94450013
+            //:100040000C9445000C9445000C9445000C9445001C
+            //:100050000C94450011241FBECFE5D4E0DEBFCDBF18
+            //:1000600011E0A0E6B0E0E4E2FEE102C005900D92EE
+            //:10007000A230B107D9F712E0A2E0B1E001C01D92B1
+            
+            // : len=10 adr = 0000 typ=00(data) data=0C942A000C9445000C9445000C944500 cks=77
+            
+            // 921dc001e0b1e0a2e012f7d907b130a2
+            // 920d9005c002e1fee2e4e0b0e6a0e011
+            // bfcdbfdee0d4e5cfbe1f24110045940c
+            // 0045940c0045940c0045940c0045940c
+            // ...
+            // 0045940c0045940c0045940c002a940c
+
+            for (i=0; i<n; i++) {
+                sprintf(&bytes[2*i], "%02x", data[n-1 - i] & 0xFF);
+            }
 
 //printf("adr = %d, data = %.256s\n", address, bytes);
 		
-		fprintf(outfile, "(%.218s\n", bytes);
-		if (n == 128) {
-			fprintf(outfile, "%.38s);\n", &bytes[218]);
-		} else {
-			fprintf(outfile, "%.230s\n", &bytes[218]);
-			fprintf(outfile, "%.64s);\n", &bytes[448]);
-		}
-		
-		if (resetHT) {
-			writeEnHeaderTrailer();
-		}
-		fprintf(outfile, "SIR 4 TDI(5);\n");
-		
-		fprintf(outfile, "SDR 15 TDI(3700);\n"); /* write flash page */
-		fprintf(outfile, "SDR 15 TDI(3500);\n");
-		fprintf(outfile, "SDR 15 TDI(3700);\n");
-		fprintf(outfile, "SDR 15 TDI(3700);\n");
-		fprintf(outfile, "RUNTEST 7E-3 SEC;\n");
+            fprintf(outfile, "(%.218s\n", bytes);
+            if (n == 128) {
+                fprintf(outfile, "%.38s);\n", &bytes[218]);
+            } else {
+                fprintf(outfile, "%.230s\n", &bytes[218]);
+                fprintf(outfile, "%.64s);\n", &bytes[448]);
+            }
+            
+            if (resetHT) {
+                writeEnHeaderTrailer();
+            }
+            fprintf(outfile, "SIR 4 TDI(5);\n");
+            
+            /* write flash page: 3700 3500 3700 3700 */
+            fprintf(outfile, "SDR 15 TDI(3700);\n");
+            fprintf(outfile, "SDR 15 TDI(3500);\n");
+            fprintf(outfile, "SDR 15 TDI(3700);\n");
+            fprintf(outfile, "SDR 15 TDI(3700);\n");
+            
+            fprintf(outfile, "RUNTEST 7E-3 SEC;\n");
 
-		address += n;
-	}
+            address += n;
+        }
+    }
 }
 
 void writeVerifyFlash() {
