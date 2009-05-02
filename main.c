@@ -291,7 +291,7 @@ void writeWriteFlash() {
             address += 2;
             
             /* write page at end */
-            if (address < lastAddress() && (address % n == 0)) {
+            if (address % n == 0 || address >= lastAddress()) {
                 fprintf(outfile, "SDR 15 TDI(3700);\n");
                 fprintf(outfile, "SDR 15 TDI(3500);\n");
                 fprintf(outfile, "SDR 15 TDI(3700);\n");
@@ -392,35 +392,53 @@ void writeVerifyFlash() {
 	fprintf(outfile, "SIR 4 TDI(5);\n");
 	fprintf(outfile, "SDR 15 TDI(2302);\n");
 	
-	while (address < lastAddress()) {
-		data = getBytes(address);
+    if (!s_pageloadProgramming) {
+        while (address < lastAddress()) {
+            data = getBytes(address);
+            
+            /* address high: 07xx; address low: 03xx */
+            address2 = address / 2;
+            fprintf(outfile, "SDR 15 TDI(07%02x);\n", (address2 >> 8) & 0xFF);
+            fprintf(outfile, "SDR 15 TDI(03%02x);\n", address2 & 0xFF);
+            
+            /* read data low and high byte */
+            fprintf(outfile, "SDR 15 TDI(3200);\n");
+            fprintf(outfile, "SDR 15 TDI(3600) TDO(00%02x) MASK(00ff);\n", data[0] & 0xFF);
+            fprintf(outfile, "SDR 15 TDI(3700) TDO(00%02x) MASK(00ff);\n", data[1] & 0xFF);
+            
+            address += 2;
+        }
+    } else {
+        while (address < lastAddress()) {
+            data = getBytes(address);
 
-		for (i=0; i<n; i++) {
-			sprintf(&bytes[2*i], "%02x", data[n-1 - i] & 0xFF);
-		}
+            for (i=0; i<n; i++) {
+                sprintf(&bytes[2*i], "%02x", data[n-1 - i] & 0xFF);
+            }
 
-		/* address high: 07xx; address low: 03xx */
-		address2 = address / 2;
-		fprintf(outfile, "SDR 15 TDI(07%02x);\n", (address2 >> 8) & 0xFF);
-		fprintf(outfile, "SDR 15 TDI(03%02x);\n", address2 & 0xFF);
-		fprintf(outfile, "SIR 4 TDI(7);\n");
-		fprintf(outfile, "SDR %d TDI(ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n", 8*n + 8);
-		if (n == 128) {
-			fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffff) TDO(%.184s\n", bytes);
-			fprintf(outfile, "%.72sff) MASK(ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n", &bytes[184]);
-			fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00);\n");
-		} else {
-			fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n");
-			fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) TDO(%.158s\n", bytes);
-			fprintf(outfile, "%.230s\n", &bytes[158]);
-			fprintf(outfile, "%.124sff) MASK(ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n", &bytes[388]);
-			fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n");
-			fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00);\n");
-		}
-		fprintf(outfile, "SIR 4 TDI(5);\n");
+            /* address high: 07xx; address low: 03xx */
+            address2 = address / 2;
+            fprintf(outfile, "SDR 15 TDI(07%02x);\n", (address2 >> 8) & 0xFF);
+            fprintf(outfile, "SDR 15 TDI(03%02x);\n", address2 & 0xFF);
+            fprintf(outfile, "SIR 4 TDI(7);\n");
+            fprintf(outfile, "SDR %d TDI(ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n", 8*n + 8);
+            if (n == 128) {
+                fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffff) TDO(%.184s\n", bytes);
+                fprintf(outfile, "%.72sff) MASK(ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n", &bytes[184]);
+                fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00);\n");
+            } else {
+                fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n");
+                fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) TDO(%.158s\n", bytes);
+                fprintf(outfile, "%.230s\n", &bytes[158]);
+                fprintf(outfile, "%.124sff) MASK(ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n", &bytes[388]);
+                fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n");
+                fprintf(outfile, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00);\n");
+            }
+            fprintf(outfile, "SIR 4 TDI(5);\n");
 
-		address += n;
-	}
+            address += n;
+        }
+    }
 }
 
 void writeProgramFuses() {
