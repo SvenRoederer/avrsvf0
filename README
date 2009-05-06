@@ -30,6 +30,13 @@ mented. The following invocations should work fine:
 ./avrsvf0 -datmega16 -s -e -ifa.hex -pf -vf -F -ova.svf -mp -f0xff89ff
 ./avrsvf0 -datmega128 -chd1 -ctd0 -chi8 -cti0 -s -e -ifa.hex -pf -vf -F -ova.svf -mp -f0xff89ff
 
+To find out which options have not yet been implemented, please invoke
+
+./avrsvf0 -h
+
+If there are features that you like to see in a future release, please contact 
+me by email or on the sourceforge forum.
+
 
 Contact
 -------------------------------------------------------------------------------
