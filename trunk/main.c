@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 	int i, j=0;
 	int invalidArgs = 0;
 	
-	s_version = "v0.1.2";
+	s_version = "v0.1.3";
 	
 	if (argc <= 1) {
 		printf("Use -h for help.\n");
