@@ -22,7 +22,6 @@ extern char s_device[];
 extern char s_infile[];
 extern char s_outfile[];
 
-extern int s_verbose;
 extern unsigned s_fuseLowByte;
 extern unsigned s_fuseHighByte;
 extern unsigned s_fuseExtraByte;

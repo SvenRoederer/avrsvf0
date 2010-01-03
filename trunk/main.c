@@ -12,6 +12,8 @@
  *
  * 10.02.2009 ASR  First version
  * 24.03.2009 ASR  Extended for atmega128, HIR/HDR
+ * 02.01.2010 ASR  Updated version for Autotools integration, 
+ *                 moved debugInfo procedure to separate file.
  */
 
 #include <stdio.h>
@@ -22,6 +24,7 @@
 
 #include "config.h"
 #include "hexreader.h"
+#include "debuginfo.h"
 
 
 FILE *outfile;
@@ -47,7 +50,7 @@ int main(int argc, char *argv[]) {
 	int i, j=0;
 	int invalidArgs = 0;
 	
-	s_version = "v0.1.3";
+	s_version = "v0.2.0";
 	
 	if (argc <= 1) {
 		printf("Use -h for help.\n");
@@ -79,16 +82,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	writeSvfFile();
-}
-
-void debugInfo(const char *formatString, ...) {
-	va_list ellipsisArgs;
-	if (!s_verbose) {
-		return;
-	}
-	va_start(ellipsisArgs, formatString);
-	vprintf((char *)formatString, ellipsisArgs);
-	va_end(ellipsisArgs);	
 }
 
 void writeEnHeaderTrailer() {
