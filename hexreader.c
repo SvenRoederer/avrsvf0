@@ -16,6 +16,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "debuginfo.h"
+
+
 /* Memory for the hex file */
 #define HEXFILE_BYTES (128*1024)
 static unsigned char s_data[HEXFILE_BYTES];
@@ -43,8 +46,13 @@ void readFile(char *fileName) {
 	}
 	
 	hexfile = fopen(fileName, "r");
+	if (!hexfile) {
+		fprintf(stderr, "failed to read file '%s', exiting\n", fileName);
+		exit(-1);
+	}
+
 	while (fgets(hexdata, 1024, hexfile)) {
-//printf("read data: %s\n", hexdata);
+        debugInfo("read data: %s\n", hexdata);
 		if (hexdata[0] == ':') {
 			if (!strncmp(hexdata, ":00000001FF", 11)) {
 				// end of file
@@ -52,7 +60,7 @@ void readFile(char *fileName) {
 			}
 			
 			if (3 == sscanf(hexdata, ":%02x%04x%02x", &dlen, &dadr, &dtype)) {
-//printf("parsed len=%d, adr=%d, type=%d\n", dlen, dadr, dtype);
+				debugInfo("parsed len=%d, adr=%d, type=%d\n", dlen, dadr, dtype);
 				if (dadr_old != dadr) {
 					fprintf(stderr, "discontiguous start address on line %d, exiting\n", curLine);
 					exit(-1);
@@ -66,7 +74,7 @@ void readFile(char *fileName) {
 						dadr++;
 					}
 					dadr_old = dadr;
-//printf("dadr_old = %d\n", dadr_old);
+					debugInfo("dadr_old = %d\n", dadr_old);
 				} else {
 					fprintf(stderr, "unrecognized record type (%d) on line %d, exiting\n", dtype, curLine);
 					exit(-1);
@@ -82,5 +90,5 @@ void readFile(char *fileName) {
 		}
 	}
 	s_adr9 = dadr_old - 1;
-//printf("s_adr9 = %d\n", s_adr9);
+	debugInfo("s_adr9 = %d\n", s_adr9);
 }

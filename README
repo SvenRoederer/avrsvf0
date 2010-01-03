@@ -12,20 +12,23 @@ Mac OS X, FreeBSD.
 Installation
 -------------------------------------------------------------------------------
 
-1. Go into the main directory and compile the avrsvf0 binary (make).
+1. Go into the main directory and run the following commands:
+    ./configure
+    make
+    make install
+
+   This compiles and installs the executable (avrsvf0).
 
 2. Go into the test directory and run the tests (make test).
-
-2. Copy the avrsvf0 binary from the main directory into a directory in your 
-   path, e.g. /usr/local/bin
 
 
 Notes
 -------------------------------------------------------------------------------
 
-I've written the tool to create simple svf files for atmega16 and atmega128
-microcontrollers. Not all features of the original tool are currently imple-
-mented. The following invocations should work fine:
+I've written this tool to create simple svf files for atmega16 and atmega128
+microcontrollers on my MacBook because the original application avrsvf.exe from 
+Atmel runs under Windows only. Not all features of the original tool are 
+currently implemented. The following invocations should work fine:
 
 ./avrsvf0 -datmega16 -s -e -ifa.hex -pf -vf -F -ova.svf -mp -f0xff89ff
 ./avrsvf0 -datmega128 -chd1 -ctd0 -chi8 -cti0 -s -e -ifa.hex -pf -vf -F -ova.svf -mp -f0xff89ff
@@ -44,4 +47,5 @@ mailto: aschweiz@mac.com   (Andreas Schweizer)
 http://sourceforge.net/projects/avrsvf0/
 
 
--- 29.03.2009 ASR
+-- 02.01.2010 ASR
+

@@ -1,0 +1,20 @@
+#! /bin/sh
+
+aclocal \
+&& automake --gnu --add-missing \
+&& autoconf
+
+
+#
+# http://www.linuxtopia.org/online_books/linux_development_tools/libtool_autoconf_automake_book/autobook_44.html#SEC44
+#
+# - Makefile.am erstellen
+# - configure.in erstellen
+#
+# $ aclocal
+# $ autoconf
+# $ automake --add-missing  (2x)
+#
+# $ ./configure
+# $ make
+#
