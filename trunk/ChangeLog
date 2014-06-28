@@ -1,22 +1,5 @@
-2010-01-02  Andreas Schweizer <aschweiz@mac.com>
+2014-06-28  Andreas Schweizer <aschweiz@mac.com>
 
-        * configure.in: New file (for GNU Autotools integration).
-        * Makefile.am: Same.
-        * ChangeLog: Same.
-        * AUTHORS: Same.
-        * INSTALL: Same.
-        * NEWS: Same.
-        * configure: Same.
-        * Makefile.in: Same.
-        * depcomp: Same.
-        * missing: Same.
-        * bootstrap: Same.
-        * aclocal.m4: Same.
-        * install-sh: Same.
-        * README: Updated information (for GNU Autotools integration).
-        * main.c: Update version number to 0.2.0, extracted debugInfo.
-        * config.h: Moved s_verbose into new file debuginfo.c.
-        * debuginfo.c, debuginfo.h: Extracted debugInfo procedure from main.c.
-        * hexreader.c: Use debuginfo, i.e. write more debugging infos to the console.
-        * Makefile: Removed.
-
+        * main.c: Added support for 1284p, updated version number to 0.2.1
+        * config.c: Added support for 1284p
+        * hexreader.c: Support for text section not starting at 0x0000, fixed line counter

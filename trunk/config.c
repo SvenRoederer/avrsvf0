@@ -45,7 +45,7 @@ int s_chi;
 int s_cti;
 
 void printUsage() {
-	printf("avrsvf0 %s (C) 2009-2010 A. Schweizer\n", s_version);
+	printf("avrsvf0 %s (C) 2009-2014 A. Schweizer\n", s_version);
 	printf("\n");
 	printf("Command Line Switches:\n");
 	printf("        [-d device name] [-m s|p] [-if infile] [-ov outfile]\n");
@@ -84,7 +84,7 @@ void printUsage() {
 	printf("h       Help information, this page. (overrides all other settings)\n");
 	printf("\n");
 	printf("Supported devices:\n");
-	printf(" ATmega16  ATmega128\n");
+	printf(" ATmega16  ATmega128  ATmega1284P (serial only)\n");
 }
 
 void parseArguments(int argc, char *argv[]) {

@@ -11,10 +11,12 @@
  * GNU General Public License for more details.
  *
  * 10.02.2009 ASR  First version
+ * 28.06.2014 ASR  Ignore type-03 records; fix line counter
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "debuginfo.h"
 
@@ -38,7 +40,7 @@ void readFile(char *fileName) {
 	char hexdata[1024];
 	FILE *hexfile;
 	unsigned i, dlen, dadr, dtype, b, curLine = 1;
-	unsigned dadr_old = 0;
+	int dadr_old = -1;
 	
 	/* clear the memory first by initializing with FF */
 	for (i=0; i<HEXFILE_BYTES; i++) {
@@ -61,11 +63,12 @@ void readFile(char *fileName) {
 			
 			if (3 == sscanf(hexdata, ":%02x%04x%02x", &dlen, &dadr, &dtype)) {
 				debugInfo("parsed len=%d, adr=%d, type=%d\n", dlen, dadr, dtype);
-				if (dadr_old != dadr) {
-					fprintf(stderr, "discontiguous start address on line %d, exiting\n", curLine);
-					exit(-1);
-				}
+                
 				if (dtype == 0) {
+					if (dadr_old >= 0 && dadr_old != dadr) {
+						fprintf(stderr, "discontiguous start address on line %d, exiting\n", curLine);
+						exit(-1);
+					}
 					i = 9;
 					while (dlen-- > 0) {
 						sscanf(&hexdata[i], "%02x", &b);
@@ -75,6 +78,10 @@ void readFile(char *fileName) {
 					}
 					dadr_old = dadr;
 					debugInfo("dadr_old = %d\n", dadr_old);
+                    
+				} else if (dtype == 3) {
+					// start segment address record, ignore
+                    
 				} else {
 					fprintf(stderr, "unrecognized record type (%d) on line %d, exiting\n", dtype, curLine);
 					exit(-1);
@@ -86,8 +93,9 @@ void readFile(char *fileName) {
 		} else {
 			fprintf(stderr, "illegal start character on line %d, exiting; %s\n", curLine, hexdata);
 			exit(-1);
-			curLine++;
 		}
+        
+		curLine++;
 	}
 	s_adr9 = dadr_old - 1;
 	debugInfo("s_adr9 = %d\n", s_adr9);
