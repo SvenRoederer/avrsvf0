@@ -14,6 +14,7 @@
  * 24.03.2009 ASR  Extended for atmega128, HIR/HDR
  * 02.01.2010 ASR  Updated version for Autotools integration, 
  *                 moved debugInfo procedure to separate file.
+ * 08.03.2013 ASR  Extended for atmega1284p
  */
 
 #include <stdio.h>
@@ -50,11 +51,11 @@ int main(int argc, char *argv[]) {
 	int i, j=0;
 	int invalidArgs = 0;
 	
-	s_version = "v0.2.0";
+	s_version = "v0.2.1";
 	
 	if (argc <= 1) {
 		printf("Use -h for help.\n");
-		return;
+		return -1;
 	}
 	
 	for (i=0; i<argc; i++) {
@@ -131,7 +132,7 @@ void writeSvfFile() {
 	outfile = fopen(s_outfile, "w");
 
 	debugInfo("writing header\n");
-	fprintf(outfile, "// avrsvf0 %s (C) 2009 A. Schweizer\n", s_version);
+	fprintf(outfile, "// avrsvf0 %s (C) 2009-2014 A. Schweizer\n", s_version);
 	fprintf(outfile, "// This file was made: %s", ctime(&rawtime));
 	fprintf(outfile, "// with this cmd: %s\n", cmd);
 	fprintf(outfile, "TRST ABSENT;\n");
@@ -220,6 +221,8 @@ void writeVerifySignatureByte() {
 		sig = "1e9403";
 	} else if (!strcmp(s_device, "atmega128")) {
 		sig = "1e9702";
+	} else if (!strcmp(s_device, "atmega1284p")) {
+		sig = "1e9705";
 	} else {
 		printf("unknown device: %s\n", s_device);
 		exit(-1);
@@ -244,7 +247,8 @@ void writeWriteFlash() {
 
 	if (!strcmp(s_device, "atmega16")) {
 		n = 128;
-	} else if (!strcmp(s_device, "atmega128")) {
+	} else if (   !strcmp(s_device, "atmega128")
+               || !strcmp(s_device, "atmega1284p")) {
 		n = 256;
 	} else {
 		printf("unknown device: %s\n", s_device);
@@ -374,7 +378,8 @@ void writeVerifyFlash() {
 
 	if (!strcmp(s_device, "atmega16")) {
 		n = 128;
-	} else if (!strcmp(s_device, "atmega128")) {
+	} else if (   !strcmp(s_device, "atmega128")
+               || !strcmp(s_device, "atmega1284p")) {
 		n = 256;
 	} else {
 		printf("unknown device: %s\n", s_device);
@@ -440,7 +445,8 @@ void writeProgramFuses() {
 
 	if (!strcmp(s_device, "atmega16")) {
 		;
-	} else if (!strcmp(s_device, "atmega128")) {
+	} else if (   !strcmp(s_device, "atmega128")
+               || !strcmp(s_device, "atmega1284p")) {
 		fprintf(outfile, "SDR 15 TDI(13%02x);\n", s_fuseExtraByte & 0xFF);
 		fprintf(outfile, "SDR 15 TDI(3b00);\n");
 		fprintf(outfile, "SDR 15 TDI(3900);\n");
@@ -471,7 +477,8 @@ void writeVerifyFuses() {
 	fprintf(outfile, "SIR 4 TDI(5);\n");
 	fprintf(outfile, "SDR 15 TDI(2304);\n");
 	
-	if (!strcmp(s_device, "atmega128")) {
+	if (   !strcmp(s_device, "atmega128")
+        || !strcmp(s_device, "atmega1284p")) {
 		/* extended fuse byte */
 		fprintf(outfile, "SDR 15 TDI(3a00);\n");
 		fprintf(outfile, "SDR 15 TDI(3b00) TDO(00%02x) MASK(00ff);\n", s_fuseExtraByte & 0xFF);
