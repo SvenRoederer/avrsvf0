@@ -40,6 +40,7 @@ void readFile(char *fileName) {
 	char hexdata[1024];
 	FILE *hexfile;
 	unsigned i, dlen, dadr, dtype, b, curLine = 1;
+    unsigned dadr_segment_offset = 0;
 	int dadr_old = -1;
 	
 	/* clear the memory first by initializing with FF */
@@ -62,22 +63,31 @@ void readFile(char *fileName) {
 			}
 			
 			if (3 == sscanf(hexdata, ":%02x%04x%02x", &dlen, &dadr, &dtype)) {
-				debugInfo("parsed len=%d, adr=%d, type=%d\n", dlen, dadr, dtype);
+				debugInfo("parsed len=%d, adr=%d, type=%d, offset=%d\n",
+                          dlen, dadr, dtype, dadr_segment_offset);
                 
 				if (dtype == 0) {
 					if (dadr_old >= 0 && dadr_old != dadr) {
+						fprintf(stderr, "dadr=%08x dadr_old=%08x dadr_segment_offset=%08x\n",
+                                dadr, dadr_old, dadr_segment_offset);
 						fprintf(stderr, "discontiguous start address on line %d, exiting\n", curLine);
 						exit(-1);
 					}
 					i = 9;
 					while (dlen-- > 0) {
 						sscanf(&hexdata[i], "%02x", &b);
-						s_data[dadr] = b;
+						s_data[dadr + dadr_segment_offset] = b;
 						i += 2;
 						dadr++;
 					}
 					dadr_old = dadr;
 					debugInfo("dadr_old = %d\n", dadr_old);
+                    
+                } else if (dtype == 2) {
+                    sscanf(&hexdata[9], "%04x", &b);
+                    dadr_segment_offset = 16 * b;
+                    debugInfo("extended_segment_address = %d\n", dadr_segment_offset);
+                    dadr_old = -1; // don't check next 00 record for continuity of address
                     
 				} else if (dtype == 3) {
 					// start segment address record, ignore
@@ -97,6 +107,6 @@ void readFile(char *fileName) {
         
 		curLine++;
 	}
-	s_adr9 = dadr_old - 1;
+	s_adr9 = dadr_segment_offset + dadr_old - 1;
 	debugInfo("s_adr9 = %d\n", s_adr9);
 }
