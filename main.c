@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
+#include <stdbool.h>
 
 #include "config.h"
 #include "hexreader.h"
@@ -46,6 +47,7 @@ void writeNop();
 
 char cmd[1024];
 int resetHT = 0;
+bool do_flash = false;
 
 int main(int argc, char *argv[]) {
 	int i, j=0;
@@ -64,11 +66,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	parseArguments(argc, argv);
-
-	if (!strlen(s_infile)) {
-		fprintf(stderr, "No input file specified.\n");
-		invalidArgs = 1;
-	}
+	
 	if (!strlen(s_outfile)) {
 		fprintf(stderr, "No output file specified.\n");
 		invalidArgs = 1;
@@ -164,17 +162,22 @@ void writeSvfFile() {
 		writeVerifySignatureByte();
 	}
 
-	debugInfo("reading input file: %s\n", s_infile);
-	readFile(s_infile);
-	
-	if (s_programDevice) {
-		debugInfo("writing WriteFlash\n");
-		writeWriteFlash();
-	}
-	
-	if (s_verifyDevice) {
+	if (do_flash) {
+		printf("yes\n");
+		debugInfo("reading input file: %s\n", s_infile);
+		readFile(s_infile);
+		
+		if (s_programDevice) {
+			debugInfo("writing WriteFlash\n");
+			writeWriteFlash();
+		}
+		
+		if (s_verifyDevice) {
 		debugInfo("writing VerifyFlash\n");
 		writeVerifyFlash();
+		}
+	} else {
+		debugInfo("no flash-file provided - skipping\n");
 	}
 
 	if (s_programFuses) {
