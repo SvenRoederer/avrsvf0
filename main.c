@@ -217,13 +217,13 @@ void writeVerifySignatureByte() {
 	/* see doc2466, p.261; signature byte for atmega16 is 00:1e 01:94 02:03 */
 	/*  p264, table 112: 0000 1000  Read sign.byte and calibration byte */
 	char *sig;
-	if (!strcmp(s_device, "atmega16")) {
+	if (!strcasecmp(s_device, "atmega16")) {
 		sig = "1e9403";
-	} else if (!strcmp(s_device, "atmega128")) {
+	} else if (!strcasecmp(s_device, "atmega128")) {
 		sig = "1e9702";
-	} else if (!strcmp(s_device, "atmega1284p")) {
+	} else if (!strcasecmp(s_device, "atmega1284p")) {
 		sig = "1e9705";
-	} else if (!strcmp(s_device, "atmega169p")) {
+	} else if (!strcasecmp(s_device, "atmega169p")) {
 		sig = "1e9405";
 	} else {
 		printf("unknown device: %s\n", s_device);
@@ -247,11 +247,11 @@ void writeWriteFlash() {
 	char *data, bytes[513];
 	int i, n;
 
-	if (!strcmp(s_device, "atmega16")
-               || !strcmp(s_device, "atmega169p")) {
+	if (!strcasecmp(s_device, "atmega16")
+               || !strcasecmp(s_device, "atmega169p")) {
 		n = 128;
-	} else if (   !strcmp(s_device, "atmega128")
-               || !strcmp(s_device, "atmega1284p")) {
+	} else if (   !strcasecmp(s_device, "atmega128")
+               || !strcasecmp(s_device, "atmega1284p")) {
 		n = 256;
 	} else {
 		printf("unknown device: %s\n", s_device);
@@ -379,11 +379,11 @@ void writeVerifyFlash() {
 	char *data, bytes[513];
 	int i, n;
 
-	if (!strcmp(s_device, "atmega16")
-		|| !strcmp(s_device, "atmega169p")) {
+	if (!strcasecmp(s_device, "atmega16")
+		|| !strcasecmp(s_device, "atmega169p")) {
 		n = 128;
-	} else if (   !strcmp(s_device, "atmega128")
-               || !strcmp(s_device, "atmega1284p")) {
+	} else if (   !strcasecmp(s_device, "atmega128")
+               || !strcasecmp(s_device, "atmega1284p")) {
 		n = 256;
 	} else {
 		printf("unknown device: %s\n", s_device);
@@ -447,11 +447,11 @@ void writeProgramFuses() {
 	fprintf(outfile, "SIR 4 TDI(5);\n");
 	fprintf(outfile, "SDR 15 TDI(2340);\n"); /* enter fuse write */
 
-	if (!strcmp(s_device, "atmega16")) {
+	if (!strcasecmp(s_device, "atmega16")) {
 		;
-	} else if (   !strcmp(s_device, "atmega128")
-               || !strcmp(s_device, "atmega1284p")
-               || !strcmp(s_device, "atmega169p")) {
+	} else if (   !strcasecmp(s_device, "atmega128")
+               || !strcasecmp(s_device, "atmega1284p")
+               || !strcasecmp(s_device, "atmega169p")) {
 		fprintf(outfile, "SDR 15 TDI(13%02x);\n", s_fuseExtraByte & 0xFF);
 		fprintf(outfile, "SDR 15 TDI(3b00);\n");
 		fprintf(outfile, "SDR 15 TDI(3900);\n");
@@ -482,9 +482,9 @@ void writeVerifyFuses() {
 	fprintf(outfile, "SIR 4 TDI(5);\n");
 	fprintf(outfile, "SDR 15 TDI(2304);\n");
 	
-	if (   !strcmp(s_device, "atmega128")
-        || !strcmp(s_device, "atmega1284p")
-        || !strcmp(s_device, "atmega169p")) {
+	if (   !strcasecmp(s_device, "atmega128")
+        || !strcasecmp(s_device, "atmega1284p")
+        || !strcasecmp(s_device, "atmega169p")) {
 		/* extended fuse byte */
 		fprintf(outfile, "SDR 15 TDI(3a00);\n");
 		fprintf(outfile, "SDR 15 TDI(3b00) TDO(00%02x) MASK(00ff);\n", s_fuseExtraByte & 0xFF);
